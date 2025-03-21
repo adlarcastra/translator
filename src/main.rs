@@ -1,5 +1,3 @@
-use std::any::Any;
-
 use evalexpr::*;
 use field_accessor::FieldAccessor;
 use lookups::{HashLookup, LkupHashMap, Lookup};
