@@ -1,13 +1,13 @@
+pub mod structs;
 mod translator;
-mod structs;
-use structs::{ModbusSensorData, ToDatabase, HasData, DbModbusData, Mapping, ModbusDatapoint};
 use crate::translator::translate_to_db_object;
+use structs::{HasData, TranslatorGetterSetter};
 
 pub fn add(left: u64, right: u64) -> u64 {
     left + right
 }
 
-pub fn translate<Y: HasData>(sensor_data: Y) -> DbModbusData{
+pub fn translate<Y: HasData, T: TranslatorGetterSetter + Default>(sensor_data: Y) -> T {
     let translated = translate_to_db_object(sensor_data);
     translated
 }

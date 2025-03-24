@@ -1,15 +1,18 @@
 use borsh::{BorshDeserialize, BorshSerialize}; //TODO: haal dit weg en maak wrapper structs in scribe?
-use evalexpr::*;
 use field_accessor::FieldAccessor;
-use lookups::{HashLookup, LkupHashMap, Lookup};
 use serde::{Deserialize, Serialize};
 
-pub trait ToDatabase {
-    fn to_db_object<Y: HasData>(input_object: Y) -> DbModbusData;
-}
+// pub trait ToDatabase {
+//     fn to_db_object<Y: HasData>(input_object: Y) -> DbSensorData;
+// }
 
 pub trait HasData {
-    fn data(&self) -> &Vec<ModbusDatapoint>;
+    fn data(&self) -> &Vec<SensorDatapoint>;
+}
+
+pub trait TranslatorGetterSetter {
+    fn field_names(&self) -> Vec<String>;
+    fn insert<T: 'static>(&mut self, field_string: &String, value: T) -> Option<()>;
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -19,265 +22,27 @@ pub enum ValueType {
     Bit,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Mapping {
-    pub address: String,
-    pub mapping_type: ValueType,
-}
-
 #[derive(BorshDeserialize, BorshSerialize, Debug, Clone, Default)]
-pub struct ModbusDatapoint {
+pub struct SensorDatapoint {
     pub address: u16,
     pub value: u16,
 }
 
 #[derive(BorshDeserialize, BorshSerialize, Debug, Clone, Default)]
 pub struct ModbusSensorData {
-    pub data: Vec<ModbusDatapoint>,
+    pub data: Vec<SensorDatapoint>,
     pub sensor_id: String,
     pub is_partial: bool,
 }
 
 impl HasData for ModbusSensorData {
-    fn data(&self) -> &Vec<ModbusDatapoint> {
+    fn data(&self) -> &Vec<SensorDatapoint> {
         &self.data
     }
 }
 
-impl DbModbusData {
-    pub fn field_names(&self) -> Vec<String> {
-        self.getstructinfo().field_names
-    }
-
-    pub fn insert<T>(&mut self, field_string: &String, value: T) -> Result<(), String>
-    where
-        Self: DbModbusDataGetterSetter<T>,
-    {
-        self.set(field_string, value)
-    }
-}
-
-#[derive(FieldAccessor, Default, Clone, Debug, sqlx::FromRow)]
-pub struct DbModbusData {
-    pub expires: Option<chrono::NaiveDateTime>,
-    pub identifier: i32,
-    pub name: String,
-    pub insmartmoduleid: i32,
-    pub boilertypeid: i32,
-    pub boilertypename: String,
-    pub systemid: i32,
-    pub systemname: String,
-    pub p_124: Option<f32>,
-    pub p_219: Option<f32>,
-    pub p_309: Option<f32>,
-    pub p_310: Option<f32>,
-    pub p_325: Option<f32>,
-    pub p_326: Option<f32>,
-    pub p_327: Option<f32>,
-    pub p_330: Option<f32>,
-    pub p_331: Option<f32>,
-    pub p_332: Option<f32>,
-    pub p_333: Option<f32>,
-    pub p_334: Option<f32>,
-    pub p_335: Option<f32>,
-    pub p_336: Option<f32>,
-    pub p_339: Option<f32>,
-    pub p_340: Option<f32>,
-    pub p_341: Option<f32>,
-    pub p_342: Option<f32>,
-    pub p_343: Option<f32>,
-    pub p_344: Option<f32>,
-    pub p_346: Option<f32>,
-    pub p_347: Option<f32>,
-    pub p_348: Option<f32>,
-    pub p_349: Option<f32>,
-    pub p_350: Option<f32>,
-    pub p_351: Option<f32>,
-    pub p_352: Option<f32>,
-    pub p_357: Option<f32>,
-    pub p_363: Option<f32>,
-    pub p_367: Option<f32>,
-    pub p_368: Option<f32>,
-    pub p_369: Option<f32>,
-    pub p_370: Option<f32>,
-    pub p_371: Option<f32>,
-    pub p_372: Option<f32>,
-    pub p_373: Option<f32>,
-    pub p_374: Option<f32>,
-    pub p_375: Option<f32>,
-    pub p_376: Option<f32>,
-    pub p_377: Option<f32>,
-    pub p_378: Option<f32>,
-    pub p_379: Option<f32>,
-    pub p_380: Option<f32>,
-    pub p_381: Option<f32>,
-    pub p_382: Option<f32>,
-    pub p_383: Option<f32>,
-    pub p_384: Option<f32>,
-    pub p_385: Option<f32>,
-    pub p_386: Option<f32>,
-    pub p_387: Option<f32>,
-    pub p_6: Option<f32>,
-    pub p_42: Option<f32>,
-    pub p_51: Option<f32>,
-    pub p_123: Option<f32>,
-    pub p_190: Option<f32>,
-    pub p_317: Option<f32>,
-    pub p_318: Option<f32>,
-    pub p_319: Option<f32>,
-    pub p_320: Option<f32>,
-    pub p_76: Option<f32>,
-    pub p_93: Option<f32>,
-    pub p_100: Option<f32>,
-    pub p_337: Option<f32>,
-    pub p_395: Option<f32>,
-    pub p_396: Option<f32>,
-    pub p_397: Option<f32>,
-    pub p_398: Option<f32>,
-    pub p_400: Option<f32>,
-    pub p_401: Option<f32>,
-    pub p_402: Option<f32>,
-    pub p_403: Option<f32>,
-    pub p_408: Option<f32>,
-    pub p_414: Option<f32>,
-    pub p_415: Option<f32>,
-    pub p_416: Option<f32>,
-    pub p_451: Option<f32>,
-    pub p_486: Option<f32>,
-    pub p_487: Option<f32>,
-    pub p_488: Option<f32>,
-    pub p_489: Option<f32>,
-    pub p_490: Option<f32>,
-    pub p_491: Option<f32>,
-    pub p_492: Option<f32>,
-    pub p_494: Option<f32>,
-    pub p_495: Option<f32>,
-    pub p_496: Option<f32>,
-    pub p_497: Option<f32>,
-    pub p_498: Option<f32>,
-    pub p_499: Option<f32>,
-    pub p_500: Option<f32>,
-    pub p_501: Option<f32>,
-    pub p_504: Option<f32>,
-    pub p_505: Option<f32>,
-    pub p_506: Option<f32>,
-    pub p_507: Option<f32>,
-    pub p_508: Option<f32>,
-    pub p_509: Option<f32>,
-    pub p_510: Option<f32>,
-    pub p_511: Option<f32>,
-    pub p_512: Option<f32>,
-    pub p_513: Option<f32>,
-    pub p_514: Option<f32>,
-    pub p_515: Option<f32>,
-    pub p_516: Option<f32>,
-    pub p_517: Option<f32>,
-    pub p_518: Option<f32>,
-    pub p_519: Option<f32>,
-    pub p_520: Option<f32>,
-    pub p_521: Option<f32>,
-    pub p_41: Option<f32>,
-    pub p_43: Option<f32>,
-    pub p_44: Option<f32>,
-    pub p_45: Option<f32>,
-    pub p_46: Option<f32>,
-    pub p_47: Option<f32>,
-    pub p_48: Option<f32>,
-    pub p_55: Option<f32>,
-    pub p_437: Option<f32>,
-    pub p_439: Option<f32>,
-    pub p_440: Option<f32>,
-    pub p_441: Option<f32>,
-    pub p_442: Option<f32>,
-    pub p_443: Option<f32>,
-    pub p_444: Option<f32>,
-    pub p_452: Option<f32>,
-    pub p_454: Option<f32>,
-    pub p_455: Option<f32>,
-    pub p_19: Option<f32>,
-    pub p_20: Option<f32>,
-    pub p_27: Option<f32>,
-    pub p_28: Option<f32>,
-    pub p_30: Option<f32>,
-    pub p_50: Option<f32>,
-    pub p_212: Option<f32>,
-    pub p_213: Option<f32>,
-    pub p_214: Option<f32>,
-    pub p_215: Option<f32>,
-    pub p_18: Option<f32>,
-    pub p_24: Option<f32>,
-    pub p_25: Option<f32>,
-    pub p_36: Option<f32>,
-    pub p_38: Option<f32>,
-    pub p_39: Option<f32>,
-    pub p_40: Option<f32>,
-    pub p_53: Option<f32>,
-    pub p_75: Option<f32>,
-    pub p_85: Option<f32>,
-    pub p_86: Option<f32>,
-    pub p_87: Option<f32>,
-    pub p_88: Option<f32>,
-    pub p_92: Option<f32>,
-    pub p_95: Option<f32>,
-    pub p_97: Option<f32>,
-    pub p_98: Option<f32>,
-    pub p_99: Option<f32>,
-    pub p_101: Option<f32>,
-    pub p_102: Option<f32>,
-    pub p_120: Option<f32>,
-    pub p_140: Option<f32>,
-    pub p_144: Option<f32>,
-    pub p_145: Option<f32>,
-    pub p_172: Option<f32>,
-    pub p_173: Option<f32>,
-    pub p_174: Option<f32>,
-    pub p_175: Option<f32>,
-    pub p_176: Option<f32>,
-    pub p_177: Option<f32>,
-    pub p_178: Option<f32>,
-    pub p_179: Option<f32>,
-    pub p_180: Option<f32>,
-    pub p_181: Option<f32>,
-    pub p_191: Option<f32>,
-    pub p_192: Option<f32>,
-    pub p_193: Option<f32>,
-    pub p_194: Option<f32>,
-    pub p_195: Option<f32>,
-    pub p_196: Option<f32>,
-    pub p_197: Option<f32>,
-    pub p_198: Option<f32>,
-    pub p_199: Option<f32>,
-    pub p_200: Option<f32>,
-    pub p_201: Option<f32>,
-    pub p_202: Option<f32>,
-    pub p_438: Option<f32>,
-    pub p_445: Option<f32>,
-    pub p_457: Option<f32>,
-    pub p_458: Option<f32>,
-    pub p_10: Option<f32>,
-    pub p_11: Option<f32>,
-    pub p_12: Option<f32>,
-    pub p_13: Option<f32>,
-    pub p_14: Option<f32>,
-    pub p_15: Option<f32>,
-    pub p_29: Option<f32>,
-    pub p_94: Option<f32>,
-    pub p_169: Option<f32>,
-    pub p_311: Option<f32>,
-    pub p_321: Option<f32>,
-    pub p_322: Option<f32>,
-    pub p_453: Option<f32>,
-    pub p_3: Option<f32>,
-    pub p_4: Option<f32>,
-    pub p_5: Option<f32>,
-    pub p_8: Option<f32>,
-    pub p_9: Option<f32>,
-    pub p_16: Option<f32>,
-    pub p_17: Option<f32>,
-    pub p_22: Option<f32>,
-    pub p_26: Option<f32>,
-    pub p_31: Option<f32>,
-    pub p_243: Option<f32>,
-    pub p_290: Option<f32>,
-    pub p_328: Option<f32>,
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Mapping {
+    pub address: String,
+    pub mapping_type: ValueType,
 }
