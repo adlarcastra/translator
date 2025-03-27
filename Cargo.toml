@@ -17,3 +17,4 @@ sqlx = { version = "0.8.3", features = [
     "chrono",
 ] }
 chrono = "0.4.39"
+mirror = { path = "C:/Users/davyd/source/repos/scribe/mirror" }

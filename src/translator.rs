@@ -1,9 +1,8 @@
-use crate::structs::{HasData, Mapping, TranslatorGetterSetter, ValueType};
-use chrono::Utc;
+use crate::structs::{HasData, Mapping, MirrorTrait, ValueType};
 use evalexpr::*;
 use lookups::{HashLookup, LkupHashMap, Lookup};
 
-pub fn translate_to_db_object<Y: HasData, T: TranslatorGetterSetter + Default>(
+pub fn translate_to_db_object<Y: HasData, T: MirrorTrait + Default>(
     sensor_data: Y,
 ) -> T {
     //TODO: panicked als er geen mapping is.
@@ -118,7 +117,7 @@ pub fn translate_to_db_object<Y: HasData, T: TranslatorGetterSetter + Default>(
                 }
             }
             object
-                .insert(&field_name, Some(sensor_value as f32))
+                .set(&field_name, Some(sensor_value as f32))
                 .unwrap();
         }
     }

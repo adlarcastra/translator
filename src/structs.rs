@@ -41,6 +41,12 @@ impl HasData for ModbusSensorData {
     }
 }
 
+pub trait MirrorTrait {
+    fn field_names(&self) -> &'static [&'static str];
+    fn get<T: std::any::Any>(&self, field: &str) -> Option<&T>;
+    fn set<T: std::any::Any>(&mut self, field: &str, new_value: T) -> Option<()>;
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Mapping {
     pub address: String,
