@@ -27,7 +27,6 @@ pub fn translate_to_db_object<Y: HasData, T: MirrorTrait + Default>(
         if sensor_mapping_result.is_some() {
             let sensor_mapping = sensor_mapping_result.unwrap();
             let sensor_value: f64;
-            println!("mapping type: {:?}", sensor_mapping.mapping_type);
             match sensor_mapping.mapping_type {
                 ValueType::Simple => {
                     let modbus_data_option = sensor_data.data().iter().find(|x| {

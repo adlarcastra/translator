@@ -131,7 +131,6 @@ fn main() {
                         } else {
                             val = 0;
                         }
-                        println!("{}: {}, full adres: {}", ad, val, address);
                         context
                             .set_value(ad.to_string().to_uppercase(), Value::from_float(val as f64))
                             .unwrap();
@@ -139,8 +138,6 @@ fn main() {
                     //calculate result
                     //precompiled.
                     let res = precompiled.eval_float_with_context(&context).unwrap();
-
-                    println!("Ik ben {:?}", res);
 
                     sensor_value = res;
                 }
@@ -171,7 +168,6 @@ fn main() {
                         } else {
                             val = 0;
                         }
-                        println!("{}: {}, full adres: {}", ad, val, address);
                         context
                             .set_value(ad.to_string().to_uppercase(), Value::from_int(val as i64))
                             .unwrap();
@@ -182,7 +178,6 @@ fn main() {
                 }
             }
             object.set(&field_name, sensor_value).unwrap();
-            println!("{}", object.get(&field_name).unwrap());
         }
     }
 }
