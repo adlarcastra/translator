@@ -216,7 +216,11 @@ pub fn translate_single_value<Y: MirrorTrait, T: MirrorTrait>(
     target
 }
 
-pub fn find_single_value<Y: MirrorTrait>(source: &Y, field_name: &str, path: &str) -> f32 {
+pub fn find_single_value<Y: MirrorTrait>(
+    source: &Y,
+    field_name: &str,
+    path: &str,
+) -> std::option::Option<f32> {
     //TODO: panicked als er geen mapping is.
     let mut rdr = csv::ReaderBuilder::new()
         .has_headers(false)
@@ -232,7 +236,15 @@ pub fn find_single_value<Y: MirrorTrait>(source: &Y, field_name: &str, path: &st
     }
 
     let target_field = map.get(field_name).unwrap();
-    let found_value: f32 = *source.get(&target_field.address).unwrap();
+
+    let found_value: Option<f32>;
+    let found_value_option = source.get(&target_field.address);
+
+    if found_value_option.is_some() {
+        found_value = *found_value_option.unwrap();
+    } else {
+        found_value = Some(0.0);
+    }
 
     found_value
 }
