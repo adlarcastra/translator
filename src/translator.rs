@@ -1,3 +1,5 @@
+use std::path;
+
 use crate::structs::{HasData, Mapping, MirrorTrait, ValueType};
 use evalexpr::*;
 use lookups::{HashLookup, LkupHashMap, Lookup};
@@ -185,4 +187,52 @@ pub fn translate_to_front_end_object<Y: MirrorTrait, T: MirrorTrait + Default>(
     // object.systemid = 0000;
     // object.systemname = "demo".to_string();
     object
+}
+
+pub fn translate_single_value<Y: MirrorTrait, T: MirrorTrait>(
+    source: Y,
+    mut target: T,
+    source_field: &str,
+    path: &str,
+) -> T {
+    //TODO: panicked als er geen mapping is.
+    let mut rdr = csv::ReaderBuilder::new()
+        .has_headers(false)
+        .from_path(path)
+        .unwrap();
+    let mut map = LkupHashMap::new(HashLookup::with_multi_keys(), |key: &Mapping| {
+        key.address.to_string()
+    });
+
+    for result in rdr.deserialize() {
+        let (key, mapping): (String, Mapping) = result.unwrap();
+        map.insert(key.to_lowercase(), mapping);
+    }
+
+    let found_value: f32 = *source.get(&source_field).unwrap();
+    let target_field = map.get(source_field).unwrap();
+    target.set(&target_field.address, found_value);
+
+    target
+}
+
+pub fn find_single_value<Y: MirrorTrait>(source: Y, field_name: &str, path: &str) -> f32 {
+    //TODO: panicked als er geen mapping is.
+    let mut rdr = csv::ReaderBuilder::new()
+        .has_headers(false)
+        .from_path(path)
+        .unwrap();
+    let mut map = LkupHashMap::new(HashLookup::with_multi_keys(), |key: &Mapping| {
+        key.address.to_string()
+    });
+
+    for result in rdr.deserialize() {
+        let (key, mapping): (String, Mapping) = result.unwrap();
+        map.insert(key.to_lowercase(), mapping);
+    }
+
+    let target_field = map.get(field_name).unwrap();
+    let found_value: f32 = *source.get(&target_field.address).unwrap();
+
+    found_value
 }
