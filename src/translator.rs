@@ -2,9 +2,7 @@ use crate::structs::{HasData, Mapping, MirrorTrait, ValueType};
 use evalexpr::*;
 use lookups::{HashLookup, LkupHashMap, Lookup};
 
-pub fn translate_to_db_object<Y: HasData, T: MirrorTrait + Default>(
-    sensor_data: Y,
-) -> T {
+pub fn translate_to_db_object<Y: HasData, T: MirrorTrait + Default>(sensor_data: Y) -> T {
     //TODO: panicked als er geen mapping is.
     let mut rdr = csv::ReaderBuilder::new()
         .has_headers(false)
@@ -115,9 +113,66 @@ pub fn translate_to_db_object<Y: HasData, T: MirrorTrait + Default>(
                     sensor_value = res.unwrap().as_int().unwrap() as f64;
                 }
             }
-            object
-                .set(&field_name, Some(sensor_value as f32))
-                .unwrap();
+            object.set(&field_name, Some(sensor_value as f32)).unwrap();
+        }
+    }
+    //TODO: dit weghalen, is voor demo
+    // object.identifier = 9999;
+    // object.expires = Some(Utc::now().naive_utc());
+    // object.insmartmoduleid = 4424;
+    // object.name = "demo".to_string();
+    // object.boilertypeid = 0000;
+    // object.boilertypename = "demo".to_string();
+    // object.systemid = 0000;
+    // object.systemname = "demo".to_string();
+    object
+}
+
+pub fn translate_to_front_end_object<Y: MirrorTrait, T: MirrorTrait + Default>(
+    sensor_data: Y,
+) -> T {
+    //TODO: panicked als er geen mapping is.
+    let mut rdr = csv::ReaderBuilder::new()
+        .has_headers(false)
+        .from_path("mapping.csv")
+        .unwrap();
+    let mut map = LkupHashMap::new(HashLookup::with_multi_keys(), |key: &Mapping| {
+        key.address.to_string()
+    });
+
+    for result in rdr.deserialize() {
+        let (key, mapping): (String, Mapping) = result.unwrap();
+        map.insert(key.to_lowercase(), mapping);
+    }
+
+    let mut object = T::default();
+    let field_names = object.field_names();
+
+    for field_name in field_names {
+        let sensor_mapping_result = map.get(&field_name.to_lowercase());
+        if sensor_mapping_result.is_some() {
+            let sensor_mapping = sensor_mapping_result.unwrap();
+            let sensor_value: f64;
+            match sensor_mapping.mapping_type {
+                ValueType::Simple => {
+                    let sensor_value_option = sensor_data.get(&sensor_mapping.address);
+
+                    if sensor_value_option.is_some() {
+                        sensor_value = *sensor_value_option.unwrap();
+                    } else {
+                        sensor_value = 0.0;
+                    }
+                }
+                ValueType::Combined => {
+                    println!("Not supported");
+                    sensor_value = 0.0;
+                }
+                ValueType::Bit => {
+                    println!("Not supported");
+                    sensor_value = 0.0;
+                }
+            }
+            object.set(&field_name, Some(sensor_value as f32)).unwrap();
         }
     }
     //TODO: dit weghalen, is voor demo
