@@ -19,7 +19,7 @@ pub fn translate_to_front_end<Y: MirrorTrait, T: MirrorTrait + Default>(sensor_d
 }
 
 pub fn translate_single_field_front_end<Y: MirrorTrait, T: MirrorTrait>(
-    source: Y,
+    source: &Y,
     target: T,
     source_field: &str,
     path: &str,
@@ -28,7 +28,11 @@ pub fn translate_single_field_front_end<Y: MirrorTrait, T: MirrorTrait>(
     translated
 }
 
-pub fn find_single_value_front_end<Y: MirrorTrait>(source: Y, field_name: &str, path: &str) -> f32 {
+pub fn find_single_value_front_end<Y: MirrorTrait>(
+    source: &Y,
+    field_name: &str,
+    path: &str,
+) -> f32 {
     let found_value = find_single_value(source, field_name, path);
     found_value
 }

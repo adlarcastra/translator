@@ -190,7 +190,7 @@ pub fn translate_to_front_end_object<Y: MirrorTrait, T: MirrorTrait + Default>(
 }
 
 pub fn translate_single_value<Y: MirrorTrait, T: MirrorTrait>(
-    source: Y,
+    source: &Y,
     mut target: T,
     source_field: &str,
     path: &str,
@@ -216,7 +216,7 @@ pub fn translate_single_value<Y: MirrorTrait, T: MirrorTrait>(
     target
 }
 
-pub fn find_single_value<Y: MirrorTrait>(source: Y, field_name: &str, path: &str) -> f32 {
+pub fn find_single_value<Y: MirrorTrait>(source: &Y, field_name: &str, path: &str) -> f32 {
     //TODO: panicked als er geen mapping is.
     let mut rdr = csv::ReaderBuilder::new()
         .has_headers(false)
