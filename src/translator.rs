@@ -203,11 +203,6 @@ pub fn find_single_value<Y: MirrorTrait>(
     field_name: &str,
     path: &str,
 ) -> Result<std::option::Option<f32>, Box<dyn std::error::Error>> {
-    //TODO: panicked als er geen mapping is.
-    let mut rdr = csv::ReaderBuilder::new()
-        .has_headers(false)
-        .from_path(path)
-        .unwrap();
 
     let mut rdr = match csv::ReaderBuilder::new()
     .has_headers(false)
