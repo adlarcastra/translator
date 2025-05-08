@@ -32,7 +32,7 @@ pub fn find_single_value_front_end<Y: MirrorTrait>(
     source: &Y,
     field_name: &str,
     path: &str,
-) -> std::option::Option<f32> {
+) -> Result<std::option::Option<f32>, Box<dyn std::error::Error>> {
     let found_value = find_single_value(source, field_name, path);
     found_value
 }
