@@ -1,4 +1,4 @@
-use std::path;
+use std::error::Error;
 
 use crate::structs::{HasData, Mapping, MirrorTrait, ValueType};
 use evalexpr::*;
@@ -118,15 +118,6 @@ pub fn translate_to_db_object<Y: HasData, T: MirrorTrait + Default>(sensor_data:
             object.set(&field_name, Some(sensor_value as f32)).unwrap();
         }
     }
-    //TODO: dit weghalen, is voor demo
-    // object.identifier = 9999;
-    // object.expires = Some(Utc::now().naive_utc());
-    // object.insmartmoduleid = 4424;
-    // object.name = "demo".to_string();
-    // object.boilertypeid = 0000;
-    // object.boilertypename = "demo".to_string();
-    // object.systemid = 0000;
-    // object.systemname = "demo".to_string();
     object
 }
 
@@ -177,15 +168,6 @@ pub fn translate_to_front_end_object<Y: MirrorTrait, T: MirrorTrait + Default>(
             object.set(&field_name, Some(sensor_value as f32)).unwrap();
         }
     }
-    //TODO: dit weghalen, is voor demo
-    // object.identifier = 9999;
-    // object.expires = Some(Utc::now().naive_utc());
-    // object.insmartmoduleid = 4424;
-    // object.name = "demo".to_string();
-    // object.boilertypeid = 0000;
-    // object.boilertypename = "demo".to_string();
-    // object.systemid = 0000;
-    // object.systemname = "demo".to_string();
     object
 }
 
@@ -220,12 +202,15 @@ pub fn find_single_value<Y: MirrorTrait>(
     source: &Y,
     field_name: &str,
     path: &str,
-) -> std::option::Option<f32> {
-    //TODO: panicked als er geen mapping is.
-    let mut rdr = csv::ReaderBuilder::new()
-        .has_headers(false)
-        .from_path(path)
-        .unwrap();
+) -> Result<std::option::Option<f32>, Box<dyn std::error::Error>> {
+
+    let mut rdr = match csv::ReaderBuilder::new()
+    .has_headers(false)
+    .from_path(path) {
+        Ok(res) => res,
+        Err(_) => return Err(("error reading file in find_single_vale").into()),
+    };
+
     let mut map = LkupHashMap::new(HashLookup::with_multi_keys(), |key: &Mapping| {
         key.address.to_string()
     });
@@ -246,5 +231,5 @@ pub fn find_single_value<Y: MirrorTrait>(
         found_value = Some(0.0);
     }
 
-    found_value
+    Ok(found_value)
 }
