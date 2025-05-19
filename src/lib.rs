@@ -3,19 +3,37 @@ mod translator;
 use std::collections::HashMap;
 
 use crate::translator::translate_to_db_object;
-use structs::{HasData, MirrorTrait};
+use structs::{HasData, Mapping, MirrorTrait};
 use translator::{
     find_single_value, translate_single_value, translate_to_db_object_new,
     translate_to_front_end_object,
 };
+
+pub fn create_mapping(path: &str) -> HashMap<String, Mapping> {
+    let mut rdr = csv::ReaderBuilder::new()
+        .has_headers(false)
+        .from_path(path)
+        .unwrap();
+
+    let mut hashmap: HashMap<String, Mapping> = HashMap::new();
+
+    for result in rdr.deserialize() {
+        let (key, mapping): (String, Mapping) = result.unwrap();
+        hashmap.insert(key, mapping);
+    }
+    hashmap
+}
 
 pub fn translate<Y: HasData, T: MirrorTrait + Default>(sensor_data: Y) -> T {
     let translated = translate_to_db_object(sensor_data);
     translated
 }
 
-pub fn translate_to_hashmap<Y: MirrorTrait>(sensor_data: Y, path: &str) -> HashMap<String, f64> {
-    let translated = translate_to_db_object_new(sensor_data, path);
+pub fn translate_to_hashmap<Y: MirrorTrait>(
+    sensor_data: Y,
+    map: HashMap<String, Mapping>,
+) -> HashMap<String, f64> {
+    let translated = translate_to_db_object_new(sensor_data, map);
     translated
 }
 
@@ -49,6 +67,7 @@ mod tests {
 
     // #[test]
     // fn test_translate_to_hashmap() {
+    //     let sensordata
     //     let result = translate_to_hashmap(sensor_data);
     //     assert_eq!(result, 4);
     // }
