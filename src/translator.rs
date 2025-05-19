@@ -121,12 +121,15 @@ pub fn translate_to_db_object<Y: HasData, T: MirrorTrait + Default>(sensor_data:
     object
 }
 
-pub fn translate_to_db_object_new<Y: MirrorTrait>(sensor_data: Y) -> HashMap<String, f64> {
+pub fn translate_to_db_object_new<Y: MirrorTrait>(
+    sensor_data: Y,
+    path: &str,
+) -> HashMap<String, f64> {
     let mut hashmap: HashMap<String, f64> = HashMap::new();
     //TODO: panicked als er geen mapping is.
     let mut rdr = csv::ReaderBuilder::new()
         .has_headers(false)
-        .from_path("mapping.csv")
+        .from_path(path)
         .unwrap();
     let mut map = LkupHashMap::new(HashLookup::with_multi_keys(), |key: &Mapping| {
         key.address.to_string()
