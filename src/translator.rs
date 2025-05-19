@@ -1,6 +1,6 @@
-use std::error::Error;
+use std::{collections::HashMap, error::Error};
 
-use crate::structs::{HasData, Mapping, MirrorTrait, ValueType};
+use crate::structs::{HasData, Mapping, MirrorTrait, SetData, ValueType};
 use evalexpr::*;
 use lookups::{HashLookup, LkupHashMap, Lookup};
 
@@ -121,6 +121,106 @@ pub fn translate_to_db_object<Y: HasData, T: MirrorTrait + Default>(sensor_data:
     object
 }
 
+pub fn translate_to_db_object_new<Y: MirrorTrait>(sensor_data: Y) -> HashMap<String, f64> {
+    let mut hashmap: HashMap<String, f64> = HashMap::new();
+    //TODO: panicked als er geen mapping is.
+    let mut rdr = csv::ReaderBuilder::new()
+        .has_headers(false)
+        .from_path("mapping.csv")
+        .unwrap();
+    let mut map = LkupHashMap::new(HashLookup::with_multi_keys(), |key: &Mapping| {
+        key.address.to_string()
+    });
+
+    for result in rdr.deserialize() {
+        let (key, mapping): (String, Mapping) = result.unwrap();
+        map.insert(key.to_lowercase(), mapping);
+    }
+
+    for map_entry in map.iter() {
+        let sensor_mapping = map_entry.1;
+        let sensor_value: f64;
+        match sensor_mapping.mapping_type {
+            ValueType::Simple => {
+                let modbus_data_option = sensor_data.get(&sensor_mapping.address);
+                if modbus_data_option.is_some() {
+                    sensor_value = *modbus_data_option.unwrap();
+                } else {
+                    sensor_value = 0.0;
+                }
+            }
+            ValueType::Combined => {
+                //Get addresses from mathematical expression
+                let address = &sensor_mapping.address;
+                let indices: Vec<_> = address.match_indices("0X").collect();
+                let mut addresses_clean = Vec::with_capacity(indices.len());
+                for i in 0..indices.len() {
+                    let ind = indices[i].0;
+                    let temp = address.as_bytes();
+                    let test = &temp[ind..ind + 6];
+                    addresses_clean.push(std::str::from_utf8(test).unwrap());
+                }
+
+                let precompiled = build_operator_tree::<DefaultNumericTypes>(address).unwrap();
+                let mut context = HashMapContext::<DefaultNumericTypes>::new();
+                for ad in addresses_clean {
+                    let val: f64;
+                    //find value for address and add to context
+                    let val_result = sensor_data.get(&sensor_mapping.address);
+                    if val_result.is_some() {
+                        val = *val_result.unwrap();
+                    } else {
+                        val = 0.0;
+                    }
+                    context
+                        .set_value(ad.to_string().to_uppercase(), Value::from_float(val as f64))
+                        .unwrap();
+                }
+                //calculate result
+                //precompiled.
+                let res = precompiled.eval_float_with_context(&context).unwrap();
+
+                sensor_value = res;
+            }
+            ValueType::Bit => {
+                //Get addresses from mathematical expression
+                let address = &sensor_mapping.address;
+                let indices: Vec<_> = address.match_indices("0X").collect();
+                let mut addresses_clean = Vec::with_capacity(indices.len());
+                for i in 0..indices.len() {
+                    let ind = indices[i].0;
+                    let temp = address.as_bytes();
+                    let test = &temp[ind..ind + 6];
+                    addresses_clean.push(std::str::from_utf8(test).unwrap());
+                }
+
+                let precompiled = build_operator_tree::<DefaultNumericTypes>(address).unwrap();
+                let mut context = HashMapContext::<DefaultNumericTypes>::new();
+                for ad in addresses_clean {
+                    let val: f64;
+                    //find value for address and add to context
+                    let val_result = sensor_data.get(&sensor_mapping.address);
+                    if val_result.is_some() {
+                        val = *val_result.unwrap();
+                    } else {
+                        val = 0.0;
+                    }
+                    context
+                        .set_value(ad.to_string().to_uppercase(), Value::from_int(val as i64))
+                        .unwrap();
+                }
+                //calculate result
+                let res = precompiled.eval_with_context(&context);
+                sensor_value = res.unwrap().as_int().unwrap() as f64;
+            }
+        }
+        //Add hier een add hier een hashmap
+        hashmap.insert(map_entry.0.to_string(), sensor_value);
+    }
+    //Doe hier hashmap in object
+    hashmap
+}
+
 pub fn translate_to_front_end_object<Y: MirrorTrait, T: MirrorTrait + Default>(
     sensor_data: Y,
 ) -> T {
@@ -203,10 +303,7 @@ pub fn find_single_value<Y: MirrorTrait>(
     field_name: &str,
     path: &str,
 ) -> Result<std::option::Option<f32>, Box<dyn std::error::Error>> {
-
-    let mut rdr = match csv::ReaderBuilder::new()
-    .has_headers(false)
-    .from_path(path) {
+    let mut rdr = match csv::ReaderBuilder::new().has_headers(false).from_path(path) {
         Ok(res) => res,
         Err(_) => return Err(("error reading file in find_single_vale").into()),
     };

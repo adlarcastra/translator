@@ -1,8 +1,14 @@
+use std::collections::HashMap;
+
 use borsh::{BorshDeserialize, BorshSerialize}; //TODO: haal dit weg en maak wrapper structs in scribe?
 use serde::{Deserialize, Serialize};
 
 pub trait HasData {
     fn data(&self) -> &Vec<SensorDatapoint>;
+}
+
+pub trait SetData {
+    fn set_data(&self, data: HashMap<String, f64>);
 }
 
 pub trait TranslatorGetterSetter {

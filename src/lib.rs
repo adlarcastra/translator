@@ -1,8 +1,13 @@
 pub mod structs;
 mod translator;
+use std::collections::HashMap;
+
 use crate::translator::translate_to_db_object;
 use structs::{HasData, MirrorTrait};
-use translator::{find_single_value, translate_single_value, translate_to_front_end_object};
+use translator::{
+    find_single_value, translate_single_value, translate_to_db_object_new,
+    translate_to_front_end_object,
+};
 
 pub fn add(left: u64, right: u64) -> u64 {
     left + right
@@ -10,6 +15,11 @@ pub fn add(left: u64, right: u64) -> u64 {
 
 pub fn translate<Y: HasData, T: MirrorTrait + Default>(sensor_data: Y) -> T {
     let translated = translate_to_db_object(sensor_data);
+    translated
+}
+
+pub fn translate_to_hashmap<Y: MirrorTrait>(sensor_data: Y) -> HashMap<String, f64> {
+    let translated = translate_to_db_object_new(sensor_data);
     translated
 }
 
