@@ -1,10 +1,5 @@
 use borsh::{BorshDeserialize, BorshSerialize}; //TODO: haal dit weg en maak wrapper structs in scribe?
-use field_accessor::FieldAccessor;
 use serde::{Deserialize, Serialize};
-
-// pub trait ToDatabase {
-//     fn to_db_object<Y: HasData>(input_object: Y) -> DbSensorData;
-// }
 
 pub trait HasData {
     fn data(&self) -> &Vec<SensorDatapoint>;
@@ -26,19 +21,6 @@ pub enum ValueType {
 pub struct SensorDatapoint {
     pub address: u16,
     pub value: u16,
-}
-
-#[derive(BorshDeserialize, BorshSerialize, Debug, Clone, Default)]
-pub struct ModbusSensorData {
-    pub data: Vec<SensorDatapoint>,
-    pub sensor_id: String,
-    pub is_partial: bool,
-}
-
-impl HasData for ModbusSensorData {
-    fn data(&self) -> &Vec<SensorDatapoint> {
-        &self.data
-    }
 }
 
 pub trait MirrorTrait {
