@@ -123,7 +123,7 @@ pub fn translate_to_db_object<Y: HasData, T: MirrorTrait + Default>(sensor_data:
 
 pub fn translate_to_db_object_new<Y: MirrorTrait + Debug>(
     sensor_data: Y,
-    map: HashMap<String, Mapping>,
+    map: &HashMap<String, Mapping>,
 ) -> HashMap<String, Option<f32>> {
     let mut hashmap: HashMap<String, Option<f32>> = HashMap::new();
 
