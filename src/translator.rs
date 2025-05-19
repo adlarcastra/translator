@@ -1,4 +1,4 @@
-use std::{collections::HashMap, error::Error};
+use std::{collections::HashMap, error::Error, fmt::Debug};
 
 use crate::structs::{HasData, Mapping, MirrorTrait, SetData, ValueType};
 use evalexpr::*;
@@ -121,22 +121,25 @@ pub fn translate_to_db_object<Y: HasData, T: MirrorTrait + Default>(sensor_data:
     object
 }
 
-pub fn translate_to_db_object_new<Y: MirrorTrait>(
+pub fn translate_to_db_object_new<Y: MirrorTrait + Debug>(
     sensor_data: Y,
     map: HashMap<String, Mapping>,
-) -> HashMap<String, f64> {
-    let mut hashmap: HashMap<String, f64> = HashMap::new();
+) -> HashMap<String, Option<f32>> {
+    let mut hashmap: HashMap<String, Option<f32>> = HashMap::new();
 
     for map_entry in map.iter() {
         let sensor_mapping = map_entry.1;
-        let sensor_value: f64;
+        let mut sensor_value: Option<f32>;
         match sensor_mapping.mapping_type {
             ValueType::Simple => {
-                let modbus_data_option = sensor_data.get(&sensor_mapping.address);
+                let modbus_data_option: Option<&Option<f32>> =
+                    sensor_data.get(&sensor_mapping.address);
+                println!("{:?}", sensor_mapping.address);
+                println!("{:?}", modbus_data_option);
                 if modbus_data_option.is_some() {
                     sensor_value = *modbus_data_option.unwrap();
                 } else {
-                    sensor_value = 0.0;
+                    sensor_value = None;
                 }
             }
             ValueType::Combined => {
@@ -154,23 +157,31 @@ pub fn translate_to_db_object_new<Y: MirrorTrait>(
                 let precompiled = build_operator_tree::<DefaultNumericTypes>(address).unwrap();
                 let mut context = HashMapContext::<DefaultNumericTypes>::new();
                 for ad in addresses_clean {
-                    let val: f64;
+                    let val: Option<f32>;
                     //find value for address and add to context
                     let val_result = sensor_data.get(&sensor_mapping.address);
                     if val_result.is_some() {
                         val = *val_result.unwrap();
                     } else {
-                        val = 0.0;
+                        val = None;
                     }
-                    context
-                        .set_value(ad.to_string().to_uppercase(), Value::from_float(val as f64))
-                        .unwrap();
+                    match val {
+                        Some(new) => {
+                            context
+                                .set_value(
+                                    ad.to_string().to_uppercase(),
+                                    Value::from_float(new as f64),
+                                )
+                                .unwrap();
+                        }
+                        None => sensor_value = None,
+                    };
                 }
                 //calculate result
                 //precompiled.
-                let res = precompiled.eval_float_with_context(&context).unwrap();
+                let res = precompiled.eval_float_with_context(&context).unwrap() as f32;
 
-                sensor_value = res;
+                sensor_value = Some(res);
             }
             ValueType::Bit => {
                 //Get addresses from mathematical expression
@@ -187,21 +198,29 @@ pub fn translate_to_db_object_new<Y: MirrorTrait>(
                 let precompiled = build_operator_tree::<DefaultNumericTypes>(address).unwrap();
                 let mut context = HashMapContext::<DefaultNumericTypes>::new();
                 for ad in addresses_clean {
-                    let val: f64;
+                    let val: Option<f32>;
                     //find value for address and add to context
                     let val_result = sensor_data.get(&sensor_mapping.address);
                     if val_result.is_some() {
                         val = *val_result.unwrap();
                     } else {
-                        val = 0.0;
+                        val = None;
                     }
-                    context
-                        .set_value(ad.to_string().to_uppercase(), Value::from_int(val as i64))
-                        .unwrap();
+                    match val {
+                        Some(new) => {
+                            context
+                                .set_value(
+                                    ad.to_string().to_uppercase(),
+                                    Value::from_int(new as i64),
+                                )
+                                .unwrap();
+                        }
+                        None => sensor_value = None,
+                    }
                 }
                 //calculate result
                 let res = precompiled.eval_with_context(&context);
-                sensor_value = res.unwrap().as_int().unwrap() as f64;
+                sensor_value = Some(res.unwrap().as_int().unwrap() as f32);
             }
         }
         //Add hier een add hier een hashmap

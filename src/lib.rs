@@ -1,6 +1,6 @@
 pub mod structs;
 mod translator;
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt::Debug};
 
 use crate::translator::translate_to_db_object;
 use structs::{HasData, Mapping, MirrorTrait};
@@ -29,10 +29,10 @@ pub fn translate<Y: HasData, T: MirrorTrait + Default>(sensor_data: Y) -> T {
     translated
 }
 
-pub fn translate_to_hashmap<Y: MirrorTrait>(
+pub fn translate_to_hashmap<Y: MirrorTrait + Debug>(
     sensor_data: Y,
     map: HashMap<String, Mapping>,
-) -> HashMap<String, f64> {
+) -> HashMap<String, Option<f32>> {
     let translated = translate_to_db_object_new(sensor_data, map);
     translated
 }
@@ -61,14 +61,28 @@ pub fn find_single_value_front_end<Y: MirrorTrait>(
     found_value
 }
 
+struct Test {
+    test_vale: String,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     // #[test]
     // fn test_translate_to_hashmap() {
-    //     let sensordata
-    //     let result = translate_to_hashmap(sensor_data);
-    //     assert_eq!(result, 4);
+    //     let mut hashmap: HashMap<String, Mapping> = HashMap::new();
+    //     hashmap.insert(
+    //         "test".to_owned(),
+    //         Mapping {
+    //             address: "p_103".to_owned(),
+    //             mapping_type: structs::ValueType::Simple,
+    //         },
+    //     );
+    //     let sensor_data = Test {
+    //         test_vale: "hoi".to_owned(),
+    //     };
+    //     let result = translate_to_hashmap(sensor_data, hashmap);
+    //     println!("{:?}", result);
     // }
 }
