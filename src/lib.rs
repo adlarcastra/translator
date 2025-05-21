@@ -30,7 +30,7 @@ pub fn translate<Y: HasData, T: MirrorTrait + Default>(sensor_data: Y) -> T {
 }
 
 pub fn translate_to_hashmap<Y: MirrorTrait + Debug>(
-    sensor_data: Y,
+    sensor_data: &Y,
     map: &HashMap<String, Mapping>,
 ) -> HashMap<String, Option<f32>> {
     let translated = translate_to_db_object_new(sensor_data, map);
