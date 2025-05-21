@@ -134,8 +134,6 @@ pub fn translate_to_db_object_new<Y: MirrorTrait + Debug>(
             ValueType::Simple => {
                 let modbus_data_option: Option<&Option<f32>> =
                     sensor_data.get(&sensor_mapping.address);
-                println!("{:?}", sensor_mapping.address);
-                println!("{:?}", modbus_data_option);
                 if modbus_data_option.is_some() {
                     sensor_value = *modbus_data_option.unwrap();
                 } else {
