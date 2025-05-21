@@ -172,7 +172,11 @@ pub fn translate_to_db_object_new<Y: MirrorTrait + Debug>(
                                 )
                                 .unwrap();
                         }
-                        None => sensor_value = None,
+                        None => {
+                            sensor_value = None;
+                            hashmap.insert(map_entry.0.to_string(), sensor_value);
+                            continue;
+                        }
                     };
                 }
                 //calculate result
