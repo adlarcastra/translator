@@ -141,6 +141,7 @@ pub fn translate_to_db_object_new<Y: MirrorTrait + Debug>(
                 }
             }
             ValueType::Combined => {
+                let mut skip = false;
                 //Get addresses from mathematical expression
                 let address = &sensor_mapping.address;
                 let indices: Vec<_> = address.match_indices("0X").collect();
@@ -173,11 +174,15 @@ pub fn translate_to_db_object_new<Y: MirrorTrait + Debug>(
                                 .unwrap();
                         }
                         None => {
+                            skip = true;
                             sensor_value = None;
                             hashmap.insert(map_entry.0.to_string(), sensor_value);
                             continue;
                         }
                     };
+                }
+                if skip {
+                    continue;
                 }
                 //calculate result
                 //precompiled.
