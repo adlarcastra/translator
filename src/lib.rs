@@ -9,11 +9,10 @@ use translator::{
     translate_to_front_end_object,
 };
 
-pub fn create_mapping(path: &str) -> HashMap<String, Mapping> {
+pub fn create_mapping(data: &[u8]) -> HashMap<String, Mapping> {
     let mut rdr = csv::ReaderBuilder::new()
         .has_headers(false)
-        .from_path(path)
-        .unwrap();
+        .from_reader(data);
 
     let mut hashmap: HashMap<String, Mapping> = HashMap::new();
 
