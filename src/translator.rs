@@ -1,6 +1,6 @@
-use std::{collections::HashMap, error::Error, fmt::Debug};
+use std::{collections::HashMap, fmt::Debug};
 
-use crate::structs::{HasData, Mapping, MirrorTrait, SetData, ValueType};
+use crate::structs::{HasData, Mapping, MirrorTrait, ValueType};
 use evalexpr::*;
 use lookups::{HashLookup, LkupHashMap, Lookup};
 
@@ -49,25 +49,25 @@ pub fn translate_to_db_object<Y: HasData, T: MirrorTrait + Default>(sensor_data:
                     let address = &sensor_mapping.address;
                     let indices: Vec<_> = address.match_indices("0X").collect();
                     let mut addresses_clean = Vec::with_capacity(indices.len());
-                    for i in 0..indices.len() {
-                        let ind = indices[i].0;
+                    for ind in indices {
                         let temp = address.as_bytes();
-                        let test = &temp[ind..ind + 6];
+                        let test = &temp[ind.0..ind.0 + 6];
                         addresses_clean.push(std::str::from_utf8(test).unwrap());
                     }
 
                     let precompiled = build_operator_tree::<DefaultNumericTypes>(address).unwrap();
                     let mut context = HashMapContext::<DefaultNumericTypes>::new();
                     for ad in addresses_clean {
-                        let val;
                         //find value for address and add to context
                         let val_result = sensor_data.data().iter().find(|x| {
                             x.address
                                 == u16::from_str_radix(ad.trim_start_matches("0X"), 16).unwrap()
                         });
-                        if val_result.is_some() {
-                            val = val_result.unwrap().value;
-                        } else {
+                        let val;
+                        if let Some(res) = val_result{
+                            val = res.value;
+                        }
+                        else {
                             val = 0;
                         }
                         context
@@ -85,25 +85,25 @@ pub fn translate_to_db_object<Y: HasData, T: MirrorTrait + Default>(sensor_data:
                     let address = &sensor_mapping.address;
                     let indices: Vec<_> = address.match_indices("0X").collect();
                     let mut addresses_clean = Vec::with_capacity(indices.len());
-                    for i in 0..indices.len() {
-                        let ind = indices[i].0;
+                    for ind in indices {
                         let temp = address.as_bytes();
-                        let test = &temp[ind..ind + 6];
+                        let test = &temp[ind.0..ind.0 + 6];
                         addresses_clean.push(std::str::from_utf8(test).unwrap());
                     }
 
                     let precompiled = build_operator_tree::<DefaultNumericTypes>(address).unwrap();
                     let mut context = HashMapContext::<DefaultNumericTypes>::new();
                     for ad in addresses_clean {
-                        let val;
                         //find value for address and add to context
                         let val_result = sensor_data.data().iter().find(|x| {
                             x.address
                                 == u16::from_str_radix(ad.trim_start_matches("0X"), 16).unwrap()
                         });
-                        if val_result.is_some() {
-                            val = val_result.unwrap().value;
-                        } else {
+                        let val;
+                        if let Some(res) = val_result{
+                            val = res.value;
+                        }
+                        else {
                             val = 0;
                         }
                         context
@@ -115,7 +115,7 @@ pub fn translate_to_db_object<Y: HasData, T: MirrorTrait + Default>(sensor_data:
                     sensor_value = res.unwrap().as_int().unwrap() as f64;
                 }
             }
-            object.set(&field_name, Some(sensor_value as f32)).unwrap();
+            object.set(field_name, Some(sensor_value as f32)).unwrap();
         }
     }
     object
@@ -146,22 +146,21 @@ pub fn translate_to_db_object_new<Y: MirrorTrait + Debug>(
                 let address = &sensor_mapping.address;
                 let indices: Vec<_> = address.match_indices("0X").collect();
                 let mut addresses_clean = Vec::with_capacity(indices.len());
-                for i in 0..indices.len() {
-                    let ind = indices[i].0;
+                for ind in indices {
                     let temp = address.as_bytes();
-                    let test = &temp[ind..ind + 6];
+                    let test = &temp[ind.0..ind.0 + 6];
                     addresses_clean.push(std::str::from_utf8(test).unwrap());
                 }
 
                 let precompiled = build_operator_tree::<DefaultNumericTypes>(address).unwrap();
                 let mut context = HashMapContext::<DefaultNumericTypes>::new();
                 for ad in addresses_clean {
-                    let val: Option<f32>;
                     //find value for address and add to context
-                    let val_result = sensor_data.get(&sensor_mapping.address);
-                    if val_result.is_some() {
-                        val = *val_result.unwrap();
-                    } else {
+                    let val: Option<i64>;
+                    if let Some(res) = sensor_data.get(&sensor_mapping.address){
+                        val = *res;
+                    }
+                    else {
                         val = None;
                     }
                     match val {
@@ -186,43 +185,44 @@ pub fn translate_to_db_object_new<Y: MirrorTrait + Debug>(
                 }
                 //calculate result
                 //precompiled.
-                let res = precompiled.eval_float_with_context(&context).unwrap() as f32;
+                match precompiled.eval_float_with_context(&context) {
+                    Ok(res) => sensor_value = Some(res as f32),
+                    Err(_) => sensor_value = None,
+                }
+                // let res = precompiled.eval_float_with_context(&context).unwrap() as f32;
 
-                sensor_value = Some(res);
+                // sensor_value = Some(res);
             }
             ValueType::Bit => {
                 //Get addresses from mathematical expression
                 let address = &sensor_mapping.address;
                 let indices: Vec<_> = address.match_indices("0X").collect();
                 let mut addresses_clean = Vec::with_capacity(indices.len());
-                for i in 0..indices.len() {
-                    let ind = indices[i].0;
+                for ind in indices {
                     let temp = address.as_bytes();
-                    let test = &temp[ind..ind + 6];
+                    let test = &temp[ind.0..ind.0 + 6];
                     addresses_clean.push(std::str::from_utf8(test).unwrap());
                 }
 
                 let precompiled = build_operator_tree::<DefaultNumericTypes>(address).unwrap();
                 let mut context = HashMapContext::<DefaultNumericTypes>::new();
                 for ad in addresses_clean {
-                    let val: Option<f32>;
+                    
                     //find value for address and add to context
-                    let val_result = sensor_data.get(&sensor_mapping.address);
-                    if val_result.is_some() {
-                        val = *val_result.unwrap();
-                    } else {
+                    let val: Option<i64>;
+                    if let Some(res) = sensor_data.get(&sensor_mapping.address){
+                        val = *res;
+                    }
+                    else {
                         val = None;
                     }
-                    match val {
-                        Some(new) => {
-                            context
-                                .set_value(
-                                    ad.to_string().to_uppercase(),
-                                    Value::from_int(new as i64),
-                                )
-                                .unwrap();
-                        }
-                        None => sensor_value = None,
+                    if let Some(new) = val {
+                        context
+                            .set_value(
+                                ad.to_string().to_uppercase(),
+                                Value::from_int(new),
+                            )
+                            .unwrap();
                     }
                 }
                 //calculate result
@@ -281,7 +281,7 @@ pub fn translate_to_front_end_object<Y: MirrorTrait, T: MirrorTrait + Default>(
                     sensor_value = 0.0;
                 }
             }
-            object.set(&field_name, Some(sensor_value as f32)).unwrap();
+            object.set(field_name, Some(sensor_value as f32)).unwrap();
         }
     }
     object
@@ -307,7 +307,7 @@ pub fn translate_single_value<Y: MirrorTrait, T: MirrorTrait>(
         map.insert(key.to_lowercase(), mapping);
     }
 
-    let found_value: f32 = *source.get(&source_field).unwrap();
+    let found_value: f32 = *source.get(source_field).unwrap();
     let target_field = map.get(source_field).unwrap();
     target.set(&target_field.address, found_value);
 
@@ -335,14 +335,10 @@ pub fn find_single_value<Y: MirrorTrait>(
 
     let target_field = map.get(field_name).unwrap();
 
-    let found_value: Option<f32>;
-    let found_value_option = source.get(&target_field.address);
-
-    if found_value_option.is_some() {
-        found_value = *found_value_option.unwrap();
-    } else {
-        found_value = Some(0.0);
+    if let Some(found_value) = source.get(&target_field.address) {
+        Ok(*found_value)
     }
-
-    Ok(found_value)
+    else {
+        Ok(Some(0.0))
+    }
 }

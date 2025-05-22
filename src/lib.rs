@@ -25,21 +25,18 @@ pub fn create_mapping(path: &str) -> HashMap<String, Mapping> {
 }
 
 pub fn translate<Y: HasData, T: MirrorTrait + Default>(sensor_data: Y) -> T {
-    let translated = translate_to_db_object(sensor_data);
-    translated
+    translate_to_db_object(sensor_data)
 }
 
 pub fn translate_to_hashmap<Y: MirrorTrait + Debug>(
     sensor_data: &Y,
     map: &HashMap<String, Mapping>,
 ) -> HashMap<String, Option<f32>> {
-    let translated = translate_to_db_object_new(sensor_data, map);
-    translated
+    translate_to_db_object_new(sensor_data, map)
 }
 
 pub fn translate_to_front_end<Y: MirrorTrait, T: MirrorTrait + Default>(sensor_data: Y) -> T {
-    let translated = translate_to_front_end_object(sensor_data);
-    translated
+    translate_to_front_end_object(sensor_data)
 }
 
 pub fn translate_single_field_front_end<Y: MirrorTrait, T: MirrorTrait>(
@@ -48,8 +45,7 @@ pub fn translate_single_field_front_end<Y: MirrorTrait, T: MirrorTrait>(
     source_field: &str,
     path: &str,
 ) -> T {
-    let translated = translate_single_value(source, target, source_field, path);
-    translated
+    translate_single_value(source, target, source_field, path)
 }
 
 pub fn find_single_value_front_end<Y: MirrorTrait>(
@@ -57,17 +53,16 @@ pub fn find_single_value_front_end<Y: MirrorTrait>(
     field_name: &str,
     path: &str,
 ) -> Result<std::option::Option<f32>, Box<dyn std::error::Error>> {
-    let found_value = find_single_value(source, field_name, path);
-    found_value
+    find_single_value(source, field_name, path)
 }
 
-struct Test {
-    test_vale: String,
-}
+// struct Test {
+//     test_vale: String,
+// }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+// #[cfg(test)]
+// mod tests {
+//     use super::*;
 
     // #[test]
     // fn test_translate_to_hashmap() {
@@ -85,4 +80,4 @@ mod tests {
     //     let result = translate_to_hashmap(sensor_data, hashmap);
     //     println!("{:?}", result);
     // }
-}
+// }

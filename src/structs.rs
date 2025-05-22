@@ -13,7 +13,7 @@ pub trait SetData {
 
 pub trait TranslatorGetterSetter {
     fn field_names(&self) -> Vec<String>;
-    fn insert<T: 'static>(&mut self, field_string: &String, value: T) -> Option<()>;
+    fn insert<T: 'static>(&mut self, field_string: &str, value: T) -> Option<()>;
 }
 
 #[derive(Serialize, Deserialize, Debug)]
