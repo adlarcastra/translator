@@ -171,7 +171,7 @@ pub fn translate_to_db_object_new<Y: MirrorTrait + Debug>(
                     }
                     match val {
                         Some(new) => {
-                            println!("set {:?}", ad);
+                            // println!("set {:?}", ad);
                             context
                                 .set_value(
                                     ad.to_string().to_lowercase(),
