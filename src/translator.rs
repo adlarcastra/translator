@@ -3,6 +3,7 @@ use std::{collections::HashMap, fmt::Debug};
 use crate::structs::{HasData, Mapping, MirrorTrait, ValueType};
 use evalexpr::*;
 use lookups::{HashLookup, LkupHashMap, Lookup};
+use regex::Regex;
 
 pub fn translate_to_db_object<Y: HasData, T: MirrorTrait + Default>(sensor_data: Y) -> T {
     //TODO: panicked als er geen mapping is.
@@ -144,35 +145,42 @@ pub fn translate_to_db_object_new<Y: MirrorTrait + Debug>(
                 let mut skip = false;
                 //Get addresses from mathematical expression
                 let address = &sensor_mapping.address;
-                let indices: Vec<_> = address.match_indices("0X").collect();
-                let mut addresses_clean = Vec::with_capacity(indices.len());
-                for ind in indices {
-                    let temp = address.as_bytes();
-                    let test = &temp[ind.0..ind.0 + 6];
-                    addresses_clean.push(std::str::from_utf8(test).unwrap());
-                }
+                let address = address.to_lowercase();
+                let re = Regex::new(r"p_\d+").unwrap();
+                let addresses_clean: Vec<&str> = re.find_iter(&address).map(|m| m.as_str()).collect();
+                // let indices: Vec<_> = address.match_indices("p_").collect();
+                // let mut addresses_clean = Vec::with_capacity(indices.len());
+                // for ind in indices {
+                //     let temp = address.as_bytes();
+                //     let test = &temp[ind.0..ind.0 + 6];
+                //     addresses_clean.push(std::str::from_utf8(test).unwrap());
+                // }
 
-                let precompiled = build_operator_tree::<DefaultNumericTypes>(address).unwrap();
+                let precompiled = build_operator_tree::<DefaultNumericTypes>(&address).unwrap();
                 let mut context = HashMapContext::<DefaultNumericTypes>::new();
                 for ad in addresses_clean {
+                    // println!("hoi {:?}", sensor_data);
                     //find value for address and add to context
-                    let val: Option<i64>;
-                    if let Some(res) = sensor_data.get(&sensor_mapping.address){
+                    let val: Option<f32>;
+                    if let Some(res) = sensor_data.get(ad){
                         val = *res;
+                        println!("{:?}", val);
                     }
                     else {
                         val = None;
                     }
                     match val {
                         Some(new) => {
+                            println!("set {:?}", ad);
                             context
                                 .set_value(
-                                    ad.to_string().to_uppercase(),
+                                    ad.to_string().to_lowercase(),
                                     Value::from_float(new as f64),
                                 )
                                 .unwrap();
                         }
                         None => {
+                            println!("skipped");
                             skip = true;
                             sensor_value = None;
                             hashmap.insert(map_entry.0.to_string(), sensor_value);
@@ -185,10 +193,15 @@ pub fn translate_to_db_object_new<Y: MirrorTrait + Debug>(
                 }
                 //calculate result
                 //precompiled.
+                println!("{:?}", &context);
                 match precompiled.eval_float_with_context(&context) {
                     Ok(res) => sensor_value = Some(res as f32),
-                    Err(_) => sensor_value = None,
+                    Err(e) => {
+                        sensor_value = None;
+                        println!("{:?}", e)
+                    }
                 }
+                println!("{:?}", sensor_value);
                 // let res = precompiled.eval_float_with_context(&context).unwrap() as f32;
 
                 // sensor_value = Some(res);
