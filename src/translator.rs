@@ -164,7 +164,7 @@ pub fn translate_to_db_object_new<Y: MirrorTrait + Debug>(
                     let val: Option<f32>;
                     if let Some(res) = sensor_data.get(ad){
                         val = *res;
-                        println!("{:?}", val);
+                        // println!("{:?}", val);
                     }
                     else {
                         val = None;
@@ -193,12 +193,12 @@ pub fn translate_to_db_object_new<Y: MirrorTrait + Debug>(
                 }
                 //calculate result
                 //precompiled.
-                println!("{:?}", &context);
+                // println!("{:?}", &context);
                 match precompiled.eval_float_with_context(&context) {
                     Ok(res) => sensor_value = Some(res as f32),
                     Err(e) => {
                         sensor_value = None;
-                        println!("{:?}", e)
+                        // println!("{:?}", e)
                     }
                 }
                 println!("{:?}", sensor_value);
