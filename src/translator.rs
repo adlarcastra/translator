@@ -180,7 +180,7 @@ pub fn translate_to_db_object_new<Y: MirrorTrait + Debug>(
                                 .unwrap();
                         }
                         None => {
-                            println!("skipped");
+                            // println!("skipped");
                             skip = true;
                             sensor_value = None;
                             hashmap.insert(map_entry.0.to_string(), sensor_value);
@@ -201,7 +201,7 @@ pub fn translate_to_db_object_new<Y: MirrorTrait + Debug>(
                         // println!("{:?}", e)
                     }
                 }
-                println!("{:?}", sensor_value);
+                // println!("{:?}", sensor_value);
                 // let res = precompiled.eval_float_with_context(&context).unwrap() as f32;
 
                 // sensor_value = Some(res);
