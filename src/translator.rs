@@ -65,10 +65,9 @@ pub fn translate_to_db_object<Y: HasData, T: MirrorTrait + Default>(sensor_data:
                                 == u16::from_str_radix(ad.trim_start_matches("0X"), 16).unwrap()
                         });
                         let val;
-                        if let Some(res) = val_result{
+                        if let Some(res) = val_result {
                             val = res.value;
-                        }
-                        else {
+                        } else {
                             val = 0;
                         }
                         context
@@ -101,10 +100,9 @@ pub fn translate_to_db_object<Y: HasData, T: MirrorTrait + Default>(sensor_data:
                                 == u16::from_str_radix(ad.trim_start_matches("0X"), 16).unwrap()
                         });
                         let val;
-                        if let Some(res) = val_result{
+                        if let Some(res) = val_result {
                             val = res.value;
-                        }
-                        else {
+                        } else {
                             val = 0;
                         }
                         context
@@ -147,7 +145,8 @@ pub fn translate_to_db_object_new<Y: MirrorTrait + Debug>(
                 let address = &sensor_mapping.address;
                 let address = address.to_lowercase();
                 let re = Regex::new(r"p_\d+").unwrap();
-                let addresses_clean: Vec<&str> = re.find_iter(&address).map(|m| m.as_str()).collect();
+                let addresses_clean: Vec<&str> =
+                    re.find_iter(&address).map(|m| m.as_str()).collect();
                 // let indices: Vec<_> = address.match_indices("p_").collect();
                 // let mut addresses_clean = Vec::with_capacity(indices.len());
                 // for ind in indices {
@@ -155,18 +154,17 @@ pub fn translate_to_db_object_new<Y: MirrorTrait + Debug>(
                 //     let test = &temp[ind.0..ind.0 + 6];
                 //     addresses_clean.push(std::str::from_utf8(test).unwrap());
                 // }
-
                 let precompiled = build_operator_tree::<DefaultNumericTypes>(&address).unwrap();
                 let mut context = HashMapContext::<DefaultNumericTypes>::new();
                 for ad in addresses_clean {
                     // println!("hoi {:?}", sensor_data);
                     //find value for address and add to context
                     let val: Option<f32>;
-                    if let Some(res) = sensor_data.get(ad){
+                    if let Some(res) = sensor_data.get(ad) {
                         val = *res;
-                        // println!("{:?}", val);
-                    }
-                    else {
+                        // println!("found value {:?} for {:?}", val, ad);
+                    } else {
+                        // println!("VALUE NOT FOUND");
                         val = None;
                     }
                     match val {
@@ -194,11 +192,17 @@ pub fn translate_to_db_object_new<Y: MirrorTrait + Debug>(
                 //calculate result
                 //precompiled.
                 // println!("{:?}", &context);
-                match precompiled.eval_float_with_context(&context) {
-                    Ok(res) => sensor_value = Some(res as f32),
+                // println!("{:#?}", context);
+                match precompiled.eval_float_with_context_mut(&mut context) {
+                    Ok(res) => {
+                        sensor_value = {
+                            // println!("Test {:?}", res);
+                            Some(res as f32)
+                        }
+                    }
                     Err(e) => {
                         sensor_value = None;
-                        // println!("{:?}", e)
+                        println!("{:?}", e)
                     }
                 }
                 // println!("{:?}", sensor_value);
@@ -220,21 +224,16 @@ pub fn translate_to_db_object_new<Y: MirrorTrait + Debug>(
                 let precompiled = build_operator_tree::<DefaultNumericTypes>(address).unwrap();
                 let mut context = HashMapContext::<DefaultNumericTypes>::new();
                 for ad in addresses_clean {
-                    
                     //find value for address and add to context
                     let val: Option<i64>;
-                    if let Some(res) = sensor_data.get(&sensor_mapping.address){
+                    if let Some(res) = sensor_data.get(&sensor_mapping.address) {
                         val = *res;
-                    }
-                    else {
+                    } else {
                         val = None;
                     }
                     if let Some(new) = val {
                         context
-                            .set_value(
-                                ad.to_string().to_uppercase(),
-                                Value::from_int(new),
-                            )
+                            .set_value(ad.to_string().to_uppercase(), Value::from_int(new))
                             .unwrap();
                     }
                 }
@@ -350,8 +349,7 @@ pub fn find_single_value<Y: MirrorTrait>(
 
     if let Some(found_value) = source.get(&target_field.address) {
         Ok(*found_value)
-    }
-    else {
+    } else {
         Ok(Some(0.0))
     }
 }
