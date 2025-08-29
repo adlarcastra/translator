@@ -59,9 +59,11 @@ pub fn find_single_value_front_end<Y: MirrorTrait>(
 //     test_vale: String,
 // }
 
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
+#[cfg(test)]
+mod tests {
+    use crate::translator::parse_address;
+
+    use super::*;
 
     // #[test]
     // fn test_translate_to_hashmap() {
@@ -79,4 +81,11 @@ pub fn find_single_value_front_end<Y: MirrorTrait>(
     //     let result = translate_to_hashmap(sensor_data, hashmap);
     //     println!("{:?}", result);
     // }
-// }
+
+    #[test]
+    fn test_parse_address() {
+        let temp = parse_address("mb_1_176_input_66/10");
+        println!("{:?}", temp);
+        assert_eq!(vec!["mb_1_176_input_66"], temp);
+    }
+}

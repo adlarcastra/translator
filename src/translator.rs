@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fmt::Debug};
+use std::{collections::HashMap, fmt::Debug, ptr::null};
 
 use crate::structs::{HasData, Mapping, MirrorTrait, ValueType};
 use evalexpr::*;
@@ -144,16 +144,9 @@ pub fn translate_to_db_object_new<Y: MirrorTrait + Debug>(
                 //Get addresses from mathematical expression
                 let address = &sensor_mapping.address;
                 let address = address.to_lowercase();
-                let re = Regex::new(r"p_\d+").unwrap();
-                let addresses_clean: Vec<&str> =
-                    re.find_iter(&address).map(|m| m.as_str()).collect();
-                // let indices: Vec<_> = address.match_indices("p_").collect();
-                // let mut addresses_clean = Vec::with_capacity(indices.len());
-                // for ind in indices {
-                //     let temp = address.as_bytes();
-                //     let test = &temp[ind.0..ind.0 + 6];
-                //     addresses_clean.push(std::str::from_utf8(test).unwrap());
-                // }
+
+                let addresses_clean: Vec<&str> = parse_address(&address);
+
                 let precompiled = build_operator_tree::<DefaultNumericTypes>(&address).unwrap();
                 let mut context = HashMapContext::<DefaultNumericTypes>::new();
                 for ad in addresses_clean {
@@ -247,6 +240,36 @@ pub fn translate_to_db_object_new<Y: MirrorTrait + Debug>(
     }
     //Doe hier hashmap in object
     hashmap
+}
+
+pub fn parse_address(input: &str) -> Vec<&str> {
+    let char_array = input.chars().collect::<Vec<char>>();
+    let mut iter = char_array.as_slice().windows(2).enumerate().peekable();
+
+    let mut indexes = vec![];
+    let mut addresses = vec![];
+
+    while iter.peek().is_some() {
+        let xd = iter.next();
+        let xdd = xd.map(|a| a.1);
+        match xdd {
+            Some(&['m', 'b']) => indexes.push(xd.unwrap().0),
+            Some(&['p', '_']) => indexes.push(xd.unwrap().0),
+            Some(_) => (),
+            None => unreachable!(),
+        };
+    }
+
+    for idx in indexes {
+        let subset = input[idx..].chars();
+        let end = subset
+            .take_while(|c| c.is_ascii_lowercase() || *c == '_' || c.is_digit(10))
+            .count();
+        println!("{:?}, {:?}", idx, end);
+        addresses.push(&input[idx..end]);
+    }
+
+    addresses
 }
 
 pub fn translate_to_front_end_object<Y: MirrorTrait, T: MirrorTrait + Default>(
