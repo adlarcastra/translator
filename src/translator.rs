@@ -207,12 +207,13 @@ pub fn translate_to_db_object_new<Y: MirrorTrait + Debug>(
                 //Get addresses from mathematical expression
                 let address = &sensor_mapping.address;
                 let indices: Vec<_> = address.match_indices("0X").collect();
-                let mut addresses_clean = Vec::with_capacity(indices.len());
-                for ind in indices {
-                    let temp = address.as_bytes();
-                    let test = &temp[ind.0..ind.0 + 6];
-                    addresses_clean.push(std::str::from_utf8(test).unwrap());
-                }
+                // let mut addresses_clean = Vec::with_capacity(indices.len());
+                // for ind in indices {
+                //     let temp = address.as_bytes();
+                //     let test = &temp[ind.0..ind.0 + 6];
+                //     addresses_clean.push(std::str::from_utf8(test).unwrap());
+                // }
+                let addresses_clean: Vec<&str> = parse_address(&address);
 
                 let precompiled = build_operator_tree::<DefaultNumericTypes>(address).unwrap();
                 let mut context = HashMapContext::<DefaultNumericTypes>::new();
