@@ -262,11 +262,12 @@ pub fn parse_address(input: &str) -> Vec<&str> {
 
     for idx in indexes {
         let subset = input[idx..].chars();
+        // println!("{:?}", subset);
         let end = subset
             .take_while(|c| c.is_ascii_lowercase() || *c == '_' || c.is_digit(10))
             .count();
-        println!("{:?}, {:?}", idx, end);
-        addresses.push(&input[idx..end]);
+        // println!("{:?}, {:?}", idx, end + idx);
+        addresses.push(&input[idx..end + idx]);
     }
 
     addresses

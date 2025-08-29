@@ -87,5 +87,21 @@ mod tests {
         let temp = parse_address("mb_1_176_input_66/10");
         println!("{:?}", temp);
         assert_eq!(vec!["mb_1_176_input_66"], temp);
+        let temp = parse_address("math::abs(mb_1_176_holding_2102 - 2) * (mb_1_176_holding_6189 * (1 - math.min(1, math::abs(mb_1_176_holding_6185))) + mb_1_176_holding_6190 * math.min(1, math::abs(mb_1_176_holding_6185))) + (mb_1_176_holding_2102 - 1) * (mb_1_176_holding_6191 * (1 - (1 - math::max(0, mb_1_176_holding_6186 - 1))) + mb_1_176_holding_6192 * (1 - math::max(0, mb_1_176_holding_6186 - 1)))");
+        assert_eq!(
+            vec![
+                "mb_1_176_holding_2102",
+                "mb_1_176_holding_6189",
+                "mb_1_176_holding_6185",
+                "mb_1_176_holding_6190",
+                "mb_1_176_holding_6185",
+                "mb_1_176_holding_2102",
+                "mb_1_176_holding_6191",
+                "mb_1_176_holding_6186",
+                "mb_1_176_holding_6192",
+                "mb_1_176_holding_6186"
+            ],
+            temp
+        );
     }
 }
