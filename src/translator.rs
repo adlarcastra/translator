@@ -206,7 +206,6 @@ pub fn translate_to_db_object_new<Y: MirrorTrait + Debug>(
             ValueType::Bit => {
                 //Get addresses from mathematical expression
                 let address = &sensor_mapping.address;
-                let indices: Vec<_> = address.match_indices("0X").collect();
                 // let mut addresses_clean = Vec::with_capacity(indices.len());
                 // for ind in indices {
                 //     let temp = address.as_bytes();
@@ -220,14 +219,15 @@ pub fn translate_to_db_object_new<Y: MirrorTrait + Debug>(
                 for ad in addresses_clean {
                     //find value for address and add to context
                     let val: Option<i64>;
-                    if let Some(res) = sensor_data.get(&sensor_mapping.address) {
-                        val = *res;
+                    if let Some(res) = sensor_data.get(ad) {
+                        let xd: Option<f32> = *res;
+                        val = xd.map(|a| a as i64);
                     } else {
                         val = None;
                     }
                     if let Some(new) = val {
                         context
-                            .set_value(ad.to_string().to_uppercase(), Value::from_int(new))
+                            .set_value(ad.to_string().to_lowercase(), Value::from_int(new))
                             .unwrap();
                     }
                 }
