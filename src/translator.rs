@@ -232,8 +232,18 @@ pub fn translate_to_db_object_new<Y: MirrorTrait + Debug>(
                     }
                 }
                 //calculate result
-                let res = precompiled.eval_with_context(&context);
-                sensor_value = Some(res.unwrap().as_int().unwrap() as f32);
+                match precompiled.eval_float_with_context_mut(&mut context) {
+                    Ok(res) => {
+                        sensor_value = {
+                            // println!("Test {:?}", res);
+                            Some(res as f32)
+                        }
+                    }
+                    Err(e) => {
+                        sensor_value = None;
+                        println!("{:?}", e)
+                    }
+                }
             }
         }
         //Add hier een add hier een hashmap
