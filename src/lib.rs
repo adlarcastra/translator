@@ -1,5 +1,6 @@
 pub mod structs;
 mod translator;
+use mirror::Mirror;
 use std::{collections::HashMap, fmt::Debug};
 
 use crate::translator::translate_to_db_object;
@@ -55,9 +56,10 @@ pub fn find_single_value_front_end<Y: MirrorTrait>(
     find_single_value(source, field_name, path)
 }
 
-// struct Test {
-//     test_vale: String,
-// }
+#[derive(Mirror, Debug)]
+struct Test {
+    p_103: f32,
+}
 
 #[cfg(test)]
 mod tests {
@@ -65,22 +67,21 @@ mod tests {
 
     use super::*;
 
-    // #[test]
-    // fn test_translate_to_hashmap() {
-    //     let mut hashmap: HashMap<String, Mapping> = HashMap::new();
-    //     hashmap.insert(
-    //         "test".to_owned(),
-    //         Mapping {
-    //             address: "p_103".to_owned(),
-    //             mapping_type: structs::ValueType::Simple,
-    //         },
-    //     );
-    //     let sensor_data = Test {
-    //         test_vale: "hoi".to_owned(),
-    //     };
-    //     let result = translate_to_hashmap(sensor_data, hashmap);
-    //     println!("{:?}", result);
-    // }
+    #[test]
+    fn test_translate_to_hashmap() {
+        let mut hashmap: HashMap<String, Mapping> = HashMap::new();
+        hashmap.insert(
+            "test_value".to_owned(),
+            Mapping {
+                address: "p_103".to_owned(),
+                mapping_type: structs::ValueType::Simple,
+            },
+        );
+        let sensor_data = Test { p_103: 10.0 };
+        let result = translate_to_hashmap(&sensor_data, &hashmap);
+        println!("{:?}", result);
+        assert_eq!(result.get("test_value").unwrap().unwrap(), 10.0);
+    }
 
     #[test]
     fn test_parse_address() {

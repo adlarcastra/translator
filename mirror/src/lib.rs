@@ -26,7 +26,13 @@ pub fn mirror_macro(input: TokenStream) -> TokenStream {
     // Generate match arms for the `get` method.
     let get_match_arms = fields.iter().map(|field| {
         quote! {
-            stringify!(#field) => Some(&self.#field as &dyn std::any::Any),
+            stringify!(#field) => {
+                if let Some(val) = (&self.#field as &dyn std::any::Any).downcast_ref::<T>() {
+                    Some(val)
+                } else {
+                    None
+                }
+            },
         }
     });
 
@@ -56,7 +62,7 @@ pub fn mirror_macro(input: TokenStream) -> TokenStream {
                 match field {
                     #(#get_match_arms)*
                     _ => None,
-                }.and_then(|val| val.downcast_ref::<T>())
+                }
             }
 
             fn set<T: std::any::Any>(&mut self, field: &str, new_value: T) -> Option<()> {
