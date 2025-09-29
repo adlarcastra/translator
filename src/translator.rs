@@ -131,10 +131,15 @@ pub fn translate_to_db_object_new<Y: MirrorTrait + Debug>(
         let mut sensor_value: Option<f32>;
         match sensor_mapping.mapping_type {
             ValueType::Simple => {
-                let modbus_data_option: Option<&f32> = sensor_data.get(&sensor_mapping.address);
-                println!("{:?}", sensor_data.get("p_103") as Option<&f32>);
+                let modbus_data_option: Option<&Option<f32>> =
+                    sensor_data.get(&sensor_mapping.address);
+                println!(
+                    "Value for {:?}, = {:?}",
+                    &sensor_mapping.address,
+                    sensor_data.get(&sensor_mapping.address) as Option<&f32>
+                );
                 if modbus_data_option.is_some() {
-                    sensor_value = modbus_data_option.copied();
+                    sensor_value = *modbus_data_option.unwrap();
                 } else {
                     sensor_value = None;
                 }
