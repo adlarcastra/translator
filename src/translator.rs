@@ -258,6 +258,138 @@ pub fn translate_to_db_object_new<Y: MirrorTrait + Debug>(
     hashmap
 }
 
+pub fn translate_to_db_object_hermes(
+    sensor_data: &HashMap<String, f32>,
+    map: &HashMap<String, Mapping>,
+) -> HashMap<String, Option<f32>> {
+    let mut hashmap: HashMap<String, Option<f32>> = HashMap::new();
+
+    for map_entry in map.iter() {
+        let sensor_mapping = map_entry.1;
+        let mut sensor_value: Option<f32>;
+        match sensor_mapping.mapping_type {
+            ValueType::Simple => {
+                let modbus_data_option = sensor_data.get(&sensor_mapping.address);
+                if modbus_data_option.is_some() {
+                    sensor_value = Some(*modbus_data_option.unwrap());
+                } else {
+                    sensor_value = None;
+                }
+            }
+            ValueType::Combined => {
+                let mut skip = false;
+                //Get addresses from mathematical expression
+                let address = &sensor_mapping.address;
+                let address = address.to_lowercase();
+
+                let addresses_clean: Vec<&str> = parse_address(&address);
+
+                let precompiled = build_operator_tree::<DefaultNumericTypes>(&address).unwrap();
+                let mut context = HashMapContext::<DefaultNumericTypes>::new();
+                for ad in addresses_clean {
+                    // println!("hoi {:?}", sensor_data);
+                    //find value for address and add to context
+                    let val: Option<f32>;
+                    if let Some(res) = sensor_data.get(ad) {
+                        val = Some(*res);
+                        // println!("found value {:?} for {:?}", val, ad);
+                    } else {
+                        // println!("VALUE NOT FOUND");
+                        val = None;
+                    }
+                    match val {
+                        Some(new) => {
+                            // println!("set {:?}", ad);
+                            context
+                                .set_value(
+                                    ad.to_string().to_lowercase(),
+                                    Value::from_float(new as f64),
+                                )
+                                .unwrap();
+                        }
+                        None => {
+                            // println!("skipped");
+                            skip = true;
+                            sensor_value = None;
+                            hashmap.insert(map_entry.0.to_string(), sensor_value);
+                            continue;
+                        }
+                    };
+                }
+                if skip {
+                    continue;
+                }
+                //calculate result
+                //precompiled.
+                // println!("{:?}", &context);
+                // println!("{:#?}", context);
+                match precompiled.eval_float_with_context_mut(&mut context) {
+                    Ok(res) => {
+                        sensor_value = {
+                            // println!("Test {:?}", res);
+                            Some(res as f32)
+                        }
+                    }
+                    Err(e) => {
+                        sensor_value = None;
+                        // println!("{:?}", e)
+                    }
+                }
+                // println!("{:?}", sensor_value);
+                // let res = precompiled.eval_float_with_context(&context).unwrap() as f32;
+
+                // sensor_value = Some(res);
+            }
+            ValueType::Bit => {
+                //Get addresses from mathematical expression
+                let address = &sensor_mapping.address;
+                // let mut addresses_clean = Vec::with_capacity(indices.len());
+                // for ind in indices {
+                //     let temp = address.as_bytes();
+                //     let test = &temp[ind.0..ind.0 + 6];
+                //     addresses_clean.push(std::str::from_utf8(test).unwrap());
+                // }
+                let addresses_clean: Vec<&str> = parse_address(&address);
+
+                let precompiled = build_operator_tree::<DefaultNumericTypes>(address).unwrap();
+                let mut context = HashMapContext::<DefaultNumericTypes>::new();
+                for ad in addresses_clean {
+                    //find value for address and add to context
+                    let val: Option<i64>;
+                    if let Some(res) = sensor_data.get(ad) {
+                        let xd: Option<f32> = Some(*res);
+                        val = xd.map(|a| a as i64);
+                    } else {
+                        val = None;
+                    }
+                    if let Some(new) = val {
+                        context
+                            .set_value(ad.to_string().to_lowercase(), Value::from_int(new))
+                            .unwrap();
+                    }
+                }
+                //calculate result
+                match precompiled.eval_float_with_context_mut(&mut context) {
+                    Ok(res) => {
+                        sensor_value = {
+                            // println!("Test {:?}", res);
+                            Some(res as f32)
+                        }
+                    }
+                    Err(e) => {
+                        sensor_value = None;
+                        // println!("{:?}", e)
+                    }
+                }
+            }
+        }
+        //Add hier een add hier een hashmap
+        hashmap.insert(map_entry.0.to_string(), sensor_value);
+    }
+    //Doe hier hashmap in object
+    hashmap
+}
+
 pub fn parse_address(input: &str) -> Vec<&str> {
     let char_array = input.chars().collect::<Vec<char>>();
     let mut iter = char_array.as_slice().windows(2).enumerate().peekable();
@@ -270,6 +402,8 @@ pub fn parse_address(input: &str) -> Vec<&str> {
         let xdd = xd.map(|a| a.1);
         match xdd {
             Some(&['m', 'b']) => indexes.push(xd.unwrap().0),
+            Some(&['i', 'n']) => indexes.push(xd.unwrap().0), //Also search for input_ or holding_
+            Some(&['h', 'o']) => indexes.push(xd.unwrap().0),
             Some(&['p', '_']) => indexes.push(xd.unwrap().0),
             Some(_) => (),
             None => unreachable!(),

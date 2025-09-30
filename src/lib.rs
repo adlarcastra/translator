@@ -3,7 +3,7 @@ mod translator;
 // use mirror::Mirror;
 use std::{collections::HashMap, fmt::Debug};
 
-use crate::translator::translate_to_db_object;
+use crate::translator::{translate_to_db_object, translate_to_db_object_hermes};
 use structs::{HasData, Mapping, MirrorTrait};
 use translator::{
     find_single_value, translate_single_value, translate_to_db_object_new,
@@ -35,6 +35,13 @@ pub fn translate_to_hashmap<Y: MirrorTrait + Debug>(
     translate_to_db_object_new(sensor_data, map)
 }
 
+pub fn translate_to_hashmap_hermes(
+    sensor_data: &HashMap<String, f32>,
+    map: &HashMap<String, Mapping>,
+) -> HashMap<String, Option<f32>> {
+    translate_to_db_object_hermes(sensor_data, map)
+}
+
 pub fn translate_to_front_end<Y: MirrorTrait, T: MirrorTrait + Default>(sensor_data: Y) -> T {
     translate_to_front_end_object(sensor_data)
 }
@@ -61,6 +68,11 @@ pub fn find_single_value_front_end<Y: MirrorTrait>(
 //     p_103: Option<f32>,
 // }
 
+#[derive(Debug)]
+struct HashmapStruct {
+    data: HashMap<String, f32>,
+}
+
 #[cfg(test)]
 mod tests {
     use crate::translator::parse_address;
@@ -82,6 +94,25 @@ mod tests {
     //     println!("{:?}", result);
     //     assert_eq!(result.get("test_value").unwrap().unwrap(), 10.0);
     // }
+
+    #[test]
+    fn test_translate_to_hashmap_hermes() {
+        let mut hashmap: HashMap<String, Mapping> = HashMap::new();
+        hashmap.insert(
+            "test_value".to_owned(),
+            Mapping {
+                address: "p_103".to_owned(),
+                mapping_type: structs::ValueType::Simple,
+            },
+        );
+        let mut sensor_data = HashmapStruct {
+            data: HashMap::new(),
+        };
+        sensor_data.data.insert("p_103".to_owned(), 10.0);
+        let result = translate_to_hashmap_hermes(&sensor_data.data, &hashmap);
+        println!("{:?}", result);
+        assert_eq!(result.get("test_value").unwrap().unwrap(), 10.0);
+    }
 
     #[test]
     fn test_parse_address() {
