@@ -378,7 +378,7 @@ pub fn translate_to_db_object_hermes(
                     }
                     Err(e) => {
                         sensor_value = None;
-                        println!("{:?}", e)
+                        // println!("{:?}", e)
                     }
                 }
             }
