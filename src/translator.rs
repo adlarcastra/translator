@@ -369,16 +369,16 @@ pub fn translate_to_db_object_hermes(
                     }
                 }
                 //calculate result
-                match precompiled.eval_float_with_context_mut(&mut context) {
+                match precompiled.eval_int_with_context(&mut context) {
                     Ok(res) => {
                         sensor_value = {
-                            // println!("Test {:?}", res);
+                            println!("Test {:?}", res);
                             Some(res as f32)
                         }
                     }
                     Err(e) => {
                         sensor_value = None;
-                        // println!("{:?}", e)
+                        println!("{:?}", e)
                     }
                 }
             }
@@ -402,7 +402,7 @@ pub fn parse_address(input: &str) -> Vec<&str> {
         let xdd = xd.map(|a| a.1);
         match xdd {
             Some(&['m', 'b']) => indexes.push(xd.unwrap().0),
-            Some(&['i', 'n']) => indexes.push(xd.unwrap().0), //Also search for input_ or holding_
+            // Some(&['i', 'n']) => indexes.push(xd.unwrap().0), //Also search for input_ or holding_
             Some(&['h', 'o']) => indexes.push(xd.unwrap().0),
             Some(&['p', '_']) => indexes.push(xd.unwrap().0),
             Some(_) => (),
