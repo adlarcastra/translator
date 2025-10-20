@@ -16,7 +16,7 @@ pub trait TranslatorGetterSetter {
     fn insert<T: 'static>(&mut self, field_string: &str, value: T) -> Option<()>;
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum ValueType {
     Simple,
     Combined,
@@ -35,7 +35,7 @@ pub trait MirrorTrait {
     fn set<T: std::any::Any>(&mut self, field: &str, new_value: T) -> Option<()>;
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Mapping {
     pub address: String,
     pub mapping_type: ValueType,
