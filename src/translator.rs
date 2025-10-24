@@ -283,6 +283,7 @@ pub fn translate_to_db_object_hermes(
                 let address = address.to_lowercase();
 
                 let addresses_clean: Vec<&str> = parse_address(&address);
+                println!("addresses: {:#?}", address);
 
                 let precompiled = build_operator_tree::<DefaultNumericTypes>(&address).unwrap();
                 let mut context = HashMapContext::<DefaultNumericTypes>::new();
@@ -391,23 +392,16 @@ pub fn translate_to_db_object_hermes(
 }
 
 pub fn parse_address(input: &str) -> Vec<&str> {
-    let char_array = input.chars().collect::<Vec<char>>();
-    let mut iter = char_array.as_slice().windows(2).enumerate().peekable();
-
     let mut indexes = vec![];
     let mut addresses = vec![];
 
-    while iter.peek().is_some() {
-        let xd = iter.next();
-        let xdd = xd.map(|a| a.1);
-        match xdd {
-            Some(&['m', 'b']) => indexes.push(xd.unwrap().0),
-            Some(&['i', 'n', 'p']) => indexes.push(xd.unwrap().0), //Also search for input_ or holding_
-            Some(&['h', 'o', 'l']) => indexes.push(xd.unwrap().0),
-            Some(&['p', '_']) => indexes.push(xd.unwrap().0),
-            Some(_) => (),
-            None => unreachable!(),
-        };
+    for (i, _) in input
+        .match_indices("mb")
+        .chain(input.match_indices("inp"))
+        .chain(input.match_indices("hol"))
+        .chain(input.match_indices("p_"))
+    {
+        indexes.push(i);
     }
 
     for idx in indexes {
