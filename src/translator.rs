@@ -287,14 +287,14 @@ pub fn translate_to_db_object_hermes(
                 let precompiled = build_operator_tree::<DefaultNumericTypes>(&address).unwrap();
                 let mut context = HashMapContext::<DefaultNumericTypes>::new();
                 for ad in addresses_clean {
-                    // println!("hoi {:?}", sensor_data);
+                    println!("hoi {:?}", ad);
                     //find value for address and add to context
                     let val: Option<f32>;
                     if let Some(res) = sensor_data.get(ad) {
                         val = Some(*res);
-                        // println!("found value {:?} for {:?}", val, ad);
+                        println!("found value {:?} for {:?}", val, ad);
                     } else {
-                        // println!("VALUE NOT FOUND");
+                        println!("VALUE NOT FOUND");
                         val = None;
                     }
                     match val {
@@ -332,7 +332,7 @@ pub fn translate_to_db_object_hermes(
                     }
                     Err(e) => {
                         sensor_value = None;
-                        // println!("{:?}", e)
+                        println!("{:?}", e)
                     }
                 }
                 // println!("{:?}", sensor_value);
@@ -402,8 +402,8 @@ pub fn parse_address(input: &str) -> Vec<&str> {
         let xdd = xd.map(|a| a.1);
         match xdd {
             Some(&['m', 'b']) => indexes.push(xd.unwrap().0),
-            // Some(&['i', 'n']) => indexes.push(xd.unwrap().0), //Also search for input_ or holding_
-            Some(&['h', 'o']) => indexes.push(xd.unwrap().0),
+            Some(&['i', 'n', 'p']) => indexes.push(xd.unwrap().0), //Also search for input_ or holding_
+            Some(&['h', 'o', 'l']) => indexes.push(xd.unwrap().0),
             Some(&['p', '_']) => indexes.push(xd.unwrap().0),
             Some(_) => (),
             None => unreachable!(),
