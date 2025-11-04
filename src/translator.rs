@@ -283,19 +283,19 @@ pub fn translate_to_db_object_hermes(
                 let address = address.to_lowercase();
 
                 let addresses_clean: Vec<&str> = parse_address(&address);
-                println!("addresses: {:#?}", address);
+                // println!("addresses: {:#?}", address);
 
                 let precompiled = build_operator_tree::<DefaultNumericTypes>(&address).unwrap();
                 let mut context = HashMapContext::<DefaultNumericTypes>::new();
                 for ad in addresses_clean {
-                    println!("hoi {:?}", ad);
+                    // println!("hoi {:?}", ad);
                     //find value for address and add to context
                     let val: Option<f32>;
                     if let Some(res) = sensor_data.get(ad) {
                         val = Some(*res);
-                        println!("found value {:?} for {:?}", val, ad);
+                        // println!("found value {:?} for {:?}", val, ad);
                     } else {
-                        println!("VALUE NOT FOUND");
+                        // println!("VALUE NOT FOUND");
                         val = None;
                     }
                     match val {
@@ -333,7 +333,7 @@ pub fn translate_to_db_object_hermes(
                     }
                     Err(e) => {
                         sensor_value = None;
-                        println!("{:?}", e)
+                        // println!("{:?}", e)
                     }
                 }
                 // println!("{:?}", sensor_value);
@@ -373,7 +373,7 @@ pub fn translate_to_db_object_hermes(
                 match precompiled.eval_int_with_context(&mut context) {
                     Ok(res) => {
                         sensor_value = {
-                            println!("Test {:?}", res);
+                            // println!("Test {:?}", res);
                             Some(res as f32)
                         }
                     }
